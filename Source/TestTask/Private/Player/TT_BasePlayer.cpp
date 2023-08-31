@@ -7,6 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/FloatingPawnMovement.h"
 #include "TimerManager.h"
+#include "Enemy/TT_Target.h"
 
 ATT_BasePlayer::ATT_BasePlayer()
 {
@@ -36,9 +37,9 @@ void ATT_BasePlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetColor(FLinearColor::MakeRandomColor());
+	SetColor(FLinearColor::Red);
 
-	GetWorldTimerManager().SetTimer(ColorTimerHandle, this, &ATT_BasePlayer::OnTimerFired, 7.0f, true);
+	//GetWorldTimerManager().SetTimer(ColorTimerHandle, this, &ATT_BasePlayer::OnTimerFired, 7.0f, true);
 }
 
 void ATT_BasePlayer::Tick(float DeltaTime)
@@ -68,15 +69,14 @@ void ATT_BasePlayer::NotifyActorBeginOverlap(AActor* OtherActor)
 		UE_LOG(LogTemp, Warning, TEXT("IS PLAYER"));
 		return;
 	}
-	const auto ActorMesh = OtherActor->FindComponentByClass<UStaticMeshComponent>();
-	if (!ActorMesh)
+
+	const auto Target = Cast<ATT_Target>(OtherActor);
+	if (!Target)
 		return;
 
-	const auto DynMaterial = ActorMesh->CreateAndSetMaterialInstanceDynamic(0);
-	if (!DynMaterial)
-		return;
-	
-	DynMaterial->SetVectorParameterValue("Color", PlayerColor);
+	Target->SetNewColor(PlayerColor);
+
+	UE_LOG(LogTemp, Warning, TEXT("Target: %s is cleaner: %i"), *Target->GetName(), Target->IsCleaner());
 }
 
 void ATT_BasePlayer::MoveForward(float Amount)
