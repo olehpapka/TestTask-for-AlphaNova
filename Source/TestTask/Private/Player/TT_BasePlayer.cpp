@@ -8,6 +8,7 @@
 #include "GameFramework/FloatingPawnMovement.h"
 #include "TimerManager.h"
 #include "Enemy/TT_Target.h"
+#include "TT_GameMode.h"
 
 ATT_BasePlayer::ATT_BasePlayer()
 {
@@ -64,19 +65,23 @@ void ATT_BasePlayer::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
 
-	if (OtherActor->IsA<ATT_BasePlayer>())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("IS PLAYER"));
-		return;
-	}
-
 	const auto Target = Cast<ATT_Target>(OtherActor);
 	if (!Target)
 		return;
 
-	Target->SetNewColor(PlayerColor);
+	const auto GameMode = Cast<ATT_GameMode>(GetWorld()->GetAuthGameMode());
+	if (!GameMode)
+		return;
 
-	UE_LOG(LogTemp, Warning, TEXT("Target: %s is cleaner: %i"), *Target->GetName(), Target->IsCleaner());
+	if (!Target->IsMarked())
+	{
+		Target->SetNewColor(PlayerColor);
+		GameMode->OnTargetMarkedDelegate.Broadcast(true);
+		if (Target->IsCleaner())
+		{
+			GameMode->SetCleanersNum(GameMode->GetCleanersNum() - 1);
+		}
+	}
 }
 
 void ATT_BasePlayer::MoveForward(float Amount)

@@ -3,6 +3,7 @@
 
 #include "Enemy/TT_Target.h"
 #include "TimerManager.h"
+#include "TT_GameMode.h"
 
 ATT_Target::ATT_Target()
 {
@@ -60,15 +61,31 @@ void ATT_Target::NotifyActorBeginOverlap(AActor* OtherActor)
 		Target->SetDefaultColor(Target->DefaultColor);
 	}*/
 
+	if (!GetWorld())
+		return;
+
+	const auto GameMode = Cast<ATT_GameMode>(GetWorld()->GetAuthGameMode());
+	if (!GameMode)
+		return;
 
 	//Marked cleaner can't clean anymore, it markes other targets instead
 	if (bIsMarked && !Target->bIsMarked && !Target->bIsCleaner)
 	{
 		Target->SetNewColor(CurrentColor);
+		GameMode->OnTargetMarkedDelegate.Broadcast(true);
+		if (Target->bIsCleaner)
+		{
+			GameMode->SetCleanersNum(GameMode->GetCleanersNum() - 1);
+		}
 	}
 	else if (bIsCleaner && !bIsMarked && Target->bIsMarked)
 	{
 		Target->SetDefaultColor(Target->DefaultColor);
+		GameMode->OnTargetMarkedDelegate.Broadcast(false);
+		if (Target->bIsCleaner)
+		{
+			GameMode->SetCleanersNum(GameMode->GetCleanersNum() + 1);
+		}
 	}
 }
 

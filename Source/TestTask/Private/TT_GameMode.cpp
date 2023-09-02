@@ -1,18 +1,36 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 
-#include "TestTaskGameModeBase.h"
+#include "TT_GameMode.h"
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
 #include "Enemy/TT_Target.h"
+#include "UI/TT_GameHUD.h"
 
-void ATestTaskGameModeBase::StartPlay()
+ATT_GameMode::ATT_GameMode()
+{
+	PrimaryActorTick.bCanEverTick = true;
+}
+
+void ATT_GameMode::StartPlay()
 {
 	Super::StartPlay();
 	SpawnTargets();
+
+	OnTargetMarkedDelegate.AddUObject(this, &ATT_GameMode::OnTargetMarked);
 }
 
-void ATestTaskGameModeBase::SpawnTargets()
+void ATT_GameMode::SetCleanersNum(int32 Num)
+{
+	CleanersNum = Num;
+}
+
+void ATT_GameMode::Tick(float DeltaTime)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Cleaners num: %i"), CleanersNum);
+}
+
+void ATT_GameMode::SpawnTargets()
 {
 	if (!GetWorld())
 		return;
@@ -20,18 +38,12 @@ void ATestTaskGameModeBase::SpawnTargets()
 	TArray<AActor*> PlayerStarts;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), PlayerStarts);
 
-	for (const auto Start : PlayerStarts)
-	{
-		UE_LOG(LogTemp, Error, TEXT("%s"), *Start->GetName());
-	}
-
 	FLinearColor TargetColor = FLinearColor::Yellow;
 	FActorSpawnParameters SpawnInfo;
 
 	int32 Multiplier = 0;
 	for (int32 i = 0; i < TargetsNum; i++)
 	{
-		
 		SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		FVector SpawnLocation = PlayerStarts[i % PlayerStarts.Num()]->GetActorLocation() 
 			 + FVector(0.0f, 0.0f, 100.0f * Multiplier);
@@ -42,6 +54,7 @@ void ATestTaskGameModeBase::SpawnTargets()
 		{
 			Target->SetDefaultColor(TargetColor);
 			Target->SetCleaner(false);
+			TargersToMark++;
 		}
 
 
@@ -67,6 +80,7 @@ void ATestTaskGameModeBase::SpawnTargets()
 		{
 			Cleaner->SetDefaultColor(CleanerColor);
 			Cleaner->SetCleaner(true);
+			TargersToMark++;
 		}
 
 		UE_LOG(LogTemp, Display, TEXT("Iteration: %i, Mult: %i"), i, Multiplier);
@@ -74,5 +88,33 @@ void ATestTaskGameModeBase::SpawnTargets()
 		{
 			Multiplier++;
 		}
+	}
+}
+
+void ATT_GameMode::OnTargetMarked(bool Marked)
+{
+	if (Marked)
+	{
+		TargersToMark--;
+	}
+	else
+	{
+		TargersToMark++;
+	}
+
+	UE_LOG(LogTemp, Display, TEXT("Targets to mark: %i"), TargersToMark);
+
+	if (TargersToMark == 0)
+	{
+		if (!GetWorld())
+			return;
+
+		const auto HUD = Cast<ATT_GameHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+		if (!HUD)
+			return;
+
+		HUD->ShowGameOverWidget();
+
+		UE_LOG(LogTemp, Error, TEXT("GAME OVER"));
 	}
 }
