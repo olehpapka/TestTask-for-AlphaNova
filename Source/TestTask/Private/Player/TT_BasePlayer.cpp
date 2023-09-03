@@ -9,6 +9,7 @@
 #include "TimerManager.h"
 #include "Enemy/TT_Target.h"
 #include "TT_GameMode.h"
+#include "DrawDebugHelpers.h"
 
 ATT_BasePlayer::ATT_BasePlayer()
 {
@@ -24,14 +25,8 @@ ATT_BasePlayer::ATT_BasePlayer()
 	//CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	//CameraComponent->SetupAttachment(RootComponent);
 
-	//FloatingMovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>("FloatingMovementComponent");
-	//
-
-
 	////Need it?
-	//AutoPossessPlayer = EAutoReceiveInput::Player0;
-
-	
+	//AutoPossessPlayer = EAutoReceiveInput::Player0;	
 }
 
 void ATT_BasePlayer::BeginPlay()
@@ -48,8 +43,9 @@ void ATT_BasePlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//UE_LOG(LogTemp, Display, TEXT("%s"), *GetActorForwardVector().ToString());
-	UE_LOG(LogTemp, Display, TEXT("Velocity: %f"), GetVelocity().Size());
+	UE_LOG(LogTemp, Display, TEXT("Velocity: %f"), StaticMesh->GetPhysicsLinearVelocity().Size());
+
+	DrawArrowBasedOnSpeed();
 }
 
 void ATT_BasePlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -94,6 +90,8 @@ void ATT_BasePlayer::MoveForward(float Amount)
 	ForceToAdd.X *= Amount * 500.0f;
 	ForceToAdd.Y *= Amount * 500.0f;
 	StaticMesh->AddForce(ForceToAdd, FName{}, true);
+
+	LimitSpeed();
 }
 
 void ATT_BasePlayer::MoveRight(float Amount)
@@ -105,6 +103,8 @@ void ATT_BasePlayer::MoveRight(float Amount)
 	ForceToAdd.X *= Amount * 500.0f;
 	ForceToAdd.Y *= Amount * 500.0f;
 	StaticMesh->AddForce(ForceToAdd, FName{}, true);
+
+	LimitSpeed();
 }
 
 void ATT_BasePlayer::SetColor(const FLinearColor& Color)
@@ -119,4 +119,24 @@ void ATT_BasePlayer::SetColor(const FLinearColor& Color)
 			PlayerColor = Color;
 		}
 	}
+}
+
+void ATT_BasePlayer::LimitSpeed()
+{
+	FVector CurrentVelocity = StaticMesh->GetPhysicsLinearVelocity();
+
+	if (CurrentVelocity.Size() > MaxSpeed)
+	{
+		FVector ClampedSpeed = CurrentVelocity.GetClampedToMaxSize(MaxSpeed);
+		UE_LOG(LogTemp, Warning, TEXT("Clamped: %s"), *ClampedSpeed.ToString());
+		StaticMesh->SetPhysicsLinearVelocity(ClampedSpeed);
+	}
+}
+
+void ATT_BasePlayer::DrawArrowBasedOnSpeed()
+{
+	FVector Start = GetActorLocation();
+	FVector End = Start + (StaticMesh->GetPhysicsLinearVelocity().GetSafeNormal() *
+		StaticMesh->GetPhysicsLinearVelocity().Size());
+	DrawDebugDirectionalArrow(GetWorld(), Start, End, 300.0f, FColor::Blue, false, -1.0f, 0, 4.0f);
 }

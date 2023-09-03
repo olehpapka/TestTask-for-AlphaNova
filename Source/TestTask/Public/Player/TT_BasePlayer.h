@@ -24,8 +24,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UStaticMeshComponent* StaticMesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UFloatingPawnMovement* FloatingMovementComponent;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
+	float MaxSpeed = 750.0f;
 
 	virtual void BeginPlay() override;
 
@@ -42,4 +42,7 @@ private:
 	void MoveRight(float Amount);
 
 	void SetColor(const FLinearColor& Color);
+
+	void LimitSpeed();
+	void DrawArrowBasedOnSpeed();
 };
