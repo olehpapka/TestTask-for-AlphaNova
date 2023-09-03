@@ -40,7 +40,8 @@ void ATT_BasePlayer::BeginPlay()
 
 	SetColor(FLinearColor::Red);
 
-	//GetWorldTimerManager().SetTimer(ColorTimerHandle, this, &ATT_BasePlayer::OnTimerFired, 7.0f, true);
+	StaticMesh = FindComponentByClass<UStaticMeshComponent>();
+	CameraComponent = FindComponentByClass<UCameraComponent>();
 }
 
 void ATT_BasePlayer::Tick(float DeltaTime)
@@ -48,7 +49,7 @@ void ATT_BasePlayer::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	//UE_LOG(LogTemp, Display, TEXT("%s"), *GetActorForwardVector().ToString());
-	//UE_LOG(LogTemp, Display, TEXT("Velocity: %f"), GetVelocity().Size());
+	UE_LOG(LogTemp, Display, TEXT("Velocity: %f"), GetVelocity().Size());
 }
 
 void ATT_BasePlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -86,12 +87,24 @@ void ATT_BasePlayer::NotifyActorBeginOverlap(AActor* OtherActor)
 
 void ATT_BasePlayer::MoveForward(float Amount)
 {
-	AddMovementInput(GetActorForwardVector(), Amount);
+	if (Amount == 0.0f)
+		return;
+
+	FVector ForceToAdd = CameraComponent->GetForwardVector();
+	ForceToAdd.X *= Amount * 500.0f;
+	ForceToAdd.Y *= Amount * 500.0f;
+	StaticMesh->AddForce(ForceToAdd, FName{}, true);
 }
 
 void ATT_BasePlayer::MoveRight(float Amount)
 {
-	AddMovementInput(GetActorRightVector(), Amount);
+	if (Amount == 0.0f)
+		return;
+
+	FVector ForceToAdd = CameraComponent->GetRightVector();
+	ForceToAdd.X *= Amount * 500.0f;
+	ForceToAdd.Y *= Amount * 500.0f;
+	StaticMesh->AddForce(ForceToAdd, FName{}, true);
 }
 
 void ATT_BasePlayer::SetColor(const FLinearColor& Color)
@@ -107,9 +120,3 @@ void ATT_BasePlayer::SetColor(const FLinearColor& Color)
 		}
 	}
 }
-
-void ATT_BasePlayer::OnTimerFired()
-{
-	SetColor(FLinearColor::MakeRandomColor());
-}
-

@@ -6,10 +6,16 @@
 #include "Kismet/GameplayStatics.h"
 #include "Enemy/TT_Target.h"
 #include "UI/TT_GameHUD.h"
+#include "Player/TT_BasePlayer.h"
+#include "Player/TT_PlayerController.h"
 
 ATT_GameMode::ATT_GameMode()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	//PrimaryActorTick.bCanEverTick = true; //Set to false
+
+	DefaultPawnClass = ATT_BasePlayer::StaticClass();
+	PlayerControllerClass = ATT_PlayerController::StaticClass();
+	HUDClass = ATT_GameHUD::StaticClass();
 }
 
 void ATT_GameMode::StartPlay()
@@ -27,7 +33,6 @@ void ATT_GameMode::SetCleanersNum(int32 Num)
 
 void ATT_GameMode::Tick(float DeltaTime)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Cleaners num: %i"), CleanersNum);
 }
 
 void ATT_GameMode::SpawnTargets()
@@ -57,8 +62,6 @@ void ATT_GameMode::SpawnTargets()
 			TargersToMark++;
 		}
 
-
-		UE_LOG(LogTemp, Display, TEXT("Iteration: %i, Mult: %i"), i, Multiplier);
 		if ((i + 1) % PlayerStarts.Num() == 0)
 		{
 			Multiplier++;
@@ -83,7 +86,6 @@ void ATT_GameMode::SpawnTargets()
 			TargersToMark++;
 		}
 
-		UE_LOG(LogTemp, Display, TEXT("Iteration: %i, Mult: %i"), i, Multiplier);
 		if ((i + 1) % PlayerStarts.Num() == 0)
 		{
 			Multiplier++;
@@ -102,8 +104,6 @@ void ATT_GameMode::OnTargetMarked(bool Marked)
 		TargersToMark++;
 	}
 
-	UE_LOG(LogTemp, Display, TEXT("Targets to mark: %i"), TargersToMark);
-
 	if (TargersToMark == 0)
 	{
 		if (!GetWorld())
@@ -114,6 +114,12 @@ void ATT_GameMode::OnTargetMarked(bool Marked)
 			return;
 
 		HUD->ShowGameOverWidget();
+
+		const auto PlayerController = GetWorld()->GetFirstPlayerController();
+		if (!PlayerController)
+			return;
+
+		PlayerController->GetPawn()->DisableInput(PlayerController);
 
 		UE_LOG(LogTemp, Error, TEXT("GAME OVER"));
 	}

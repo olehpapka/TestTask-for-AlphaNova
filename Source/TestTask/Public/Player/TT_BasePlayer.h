@@ -37,12 +37,9 @@ protected:
 
 private:
 	FLinearColor PlayerColor;
-	FTimerHandle ColorTimerHandle;
 
 	void MoveForward(float Amount);
 	void MoveRight(float Amount);
 
 	void SetColor(const FLinearColor& Color);
-
-	void OnTimerFired();
 };
