@@ -11,8 +11,6 @@
 
 ATT_GameMode::ATT_GameMode()
 {
-	//PrimaryActorTick.bCanEverTick = true; //Set to false
-
 	DefaultPawnClass = ATT_BasePlayer::StaticClass();
 	PlayerControllerClass = ATT_PlayerController::StaticClass();
 	HUDClass = ATT_GameHUD::StaticClass();
@@ -29,10 +27,6 @@ void ATT_GameMode::StartPlay()
 void ATT_GameMode::SetCleanersNum(int32 Num)
 {
 	CleanersNum = Num;
-}
-
-void ATT_GameMode::Tick(float DeltaTime)
-{
 }
 
 void ATT_GameMode::SpawnTargets()

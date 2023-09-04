@@ -31,13 +31,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Game")
 	TSubclassOf<ATT_Target> EnemyClass;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Game", meta = (ClampMin = "1", ClampMax = "50"))
+	UPROPERTY(EditDefaultsOnly, Category = "Game", meta = (ClampMin = "0", ClampMax = "50"))
 	int32 TargetsNum = 5;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Game", meta = (ClampMin = "1", ClampMax = "15"))
+	UPROPERTY(EditDefaultsOnly, Category = "Game", meta = (ClampMin = "0", ClampMax = "15"))
 	int32 CleanersNum = 2;
-
-	virtual void Tick(float DeltaTime) override;
 
 private:
 	void SpawnTargets();

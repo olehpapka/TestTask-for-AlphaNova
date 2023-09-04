@@ -5,31 +5,33 @@
 #include "Components/InputComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Camera/CameraComponent.h"
-#include "GameFramework/FloatingPawnMovement.h"
-#include "TimerManager.h"
 #include "Enemy/TT_Target.h"
 #include "TT_GameMode.h"
 #include "DrawDebugHelpers.h"
 #include "Sound/SoundCue.h"
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraFunctionLibrary.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Components/SphereComponent.h"
 
 ATT_BasePlayer::ATT_BasePlayer()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	bUseControllerRotationYaw = true;
+	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("StaticMeshComponent");
+	SetRootComponent(MeshComponent);
 
-	//RootComponent = CreateDefaultSubobject<USceneComponent>("RootSceneComponent");
+	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArmComponent");
+	SpringArmComponent->SetupAttachment(GetRootComponent());
+	SpringArmComponent->TargetArmLength = 300.0f;
+	SpringArmComponent->SocketOffset = FVector{ 0.0f, 0.0f, 50.0f };
+	SpringArmComponent->bUsePawnControlRotation = true;
 
-	//StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>("StaticMeshComponent");
-	//SetRootComponent(StaticMesh);
+	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
+	CameraComponent->SetupAttachment(SpringArmComponent);
 
-	//CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
-	//CameraComponent->SetupAttachment(RootComponent);
-
-	////Need it?
-	//AutoPossessPlayer = EAutoReceiveInput::Player0;	
+	SphereComponent = CreateDefaultSubobject<USphereComponent>("SphereComponent");
+	SphereComponent->SetupAttachment(GetRootComponent());
 }
 
 void ATT_BasePlayer::BeginPlay()
@@ -37,16 +39,13 @@ void ATT_BasePlayer::BeginPlay()
 	Super::BeginPlay();
 
 	SetColor(FLinearColor::Red);
-
-	StaticMesh = FindComponentByClass<UStaticMeshComponent>();
-	CameraComponent = FindComponentByClass<UCameraComponent>();
 }
 
 void ATT_BasePlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	UE_LOG(LogTemp, Display, TEXT("Velocity: %f"), StaticMesh->GetPhysicsLinearVelocity().Size());
+	UE_LOG(LogTemp, Display, TEXT("Velocity: %f"), MeshComponent->GetPhysicsLinearVelocity().Size());
 
 	DrawArrowBasedOnSpeed();
 }
@@ -69,12 +68,12 @@ void ATT_BasePlayer::NotifyActorBeginOverlap(AActor* OtherActor)
 	if (!Target)
 		return;
 
-	const auto GameMode = Cast<ATT_GameMode>(GetWorld()->GetAuthGameMode());
-	if (!GameMode)
-		return;
-
 	if (!Target->IsMarked())
 	{
+		const auto GameMode = Cast<ATT_GameMode>(GetWorld()->GetAuthGameMode());
+		if (!GameMode)
+			return;
+
 		Target->SetNewColor(PlayerColor);
 		GameMode->OnTargetMarkedDelegate.Broadcast(true);
 		if (Target->IsCleaner())
@@ -96,7 +95,7 @@ void ATT_BasePlayer::MoveForward(float Amount)
 	FVector ForceToAdd = CameraComponent->GetForwardVector();
 	ForceToAdd.X *= Amount * 500.0f;
 	ForceToAdd.Y *= Amount * 500.0f;
-	StaticMesh->AddForce(ForceToAdd, FName{}, true);
+	MeshComponent->AddForce(ForceToAdd, FName{}, true);
 
 	LimitSpeed();
 }
@@ -109,17 +108,16 @@ void ATT_BasePlayer::MoveRight(float Amount)
 	FVector ForceToAdd = CameraComponent->GetRightVector();
 	ForceToAdd.X *= Amount * 500.0f;
 	ForceToAdd.Y *= Amount * 500.0f;
-	StaticMesh->AddForce(ForceToAdd, FName{}, true);
+	MeshComponent->AddForce(ForceToAdd, FName{}, true);
 
 	LimitSpeed();
 }
 
 void ATT_BasePlayer::SetColor(const FLinearColor& Color)
 {
-	const auto Mesh = FindComponentByClass<UStaticMeshComponent>();
-	if (Mesh)
+	if (MeshComponent)
 	{
-		const auto DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(0);
+		const auto DynMaterial = MeshComponent->CreateAndSetMaterialInstanceDynamic(0);
 		if (DynMaterial)
 		{
 			DynMaterial->SetVectorParameterValue("Color", Color);
@@ -130,20 +128,20 @@ void ATT_BasePlayer::SetColor(const FLinearColor& Color)
 
 void ATT_BasePlayer::LimitSpeed()
 {
-	FVector CurrentVelocity = StaticMesh->GetPhysicsLinearVelocity();
+	FVector CurrentVelocity = MeshComponent->GetPhysicsLinearVelocity();
 
 	if (CurrentVelocity.Size() > MaxSpeed)
 	{
 		FVector ClampedSpeed = CurrentVelocity.GetClampedToMaxSize(MaxSpeed);
 		UE_LOG(LogTemp, Warning, TEXT("Clamped: %s"), *ClampedSpeed.ToString());
-		StaticMesh->SetPhysicsLinearVelocity(ClampedSpeed);
+		MeshComponent->SetPhysicsLinearVelocity(ClampedSpeed);
 	}
 }
 
 void ATT_BasePlayer::DrawArrowBasedOnSpeed()
 {
 	FVector Start = GetActorLocation();
-	FVector End = Start + (StaticMesh->GetPhysicsLinearVelocity().GetSafeNormal() *
-		StaticMesh->GetPhysicsLinearVelocity().Size());
+	FVector End = Start + (MeshComponent->GetPhysicsLinearVelocity().GetSafeNormal() *
+		MeshComponent->GetPhysicsLinearVelocity().Size());
 	DrawDebugDirectionalArrow(GetWorld(), Start, End, 300.0f, FColor::Blue, false, -1.0f, 0, 4.0f);
 }

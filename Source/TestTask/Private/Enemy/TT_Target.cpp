@@ -5,10 +5,18 @@
 #include "TimerManager.h"
 #include "TT_GameMode.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Components/BoxComponent.h"
 
 ATT_Target::ATT_Target()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("StaticMeshComponent");
+	MeshComponent->SetCenterOfMass(FVector{ 20.0f, 0.0f, 125.0f });
+	SetRootComponent(MeshComponent);
+
+	BoxComponent = CreateDefaultSubobject<UBoxComponent>("BoxComponent");
+	BoxComponent->SetupAttachment(MeshComponent);
 }
 
 void ATT_Target::SetDefaultColor(const FLinearColor& NewColor)
@@ -29,24 +37,17 @@ void ATT_Target::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	MeshComponent = FindComponentByClass<UStaticMeshComponent>();
-	if (!MeshComponent)
-		return;
-
 	GetWorldTimerManager().SetTimer(MoveTimerHandle, this, &ATT_Target::OnTimerFired, UpdateTime, true);
 }
 
 void ATT_Target::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	
 }
 
 void ATT_Target::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
-
 
 	const auto Target = Cast<ATT_Target>(OtherActor);
 	if (!Target)
@@ -103,16 +104,14 @@ void ATT_Target::NotifyActorBeginOverlap(AActor* OtherActor)
 void ATT_Target::OnTimerFired()
 {
 	FVector RandomImpulse = FVector(FMath::FRandRange(-1.0f, 1.0f), FMath::FRandRange(-1.0f, 1.0f), 0.0f).GetSafeNormal() * ImpulseStrength;
-	RandomImpulse.Z = 0.0f;
 	MeshComponent->AddImpulse(RandomImpulse);
 }
 
 void ATT_Target::SetMaterialColor()
 {
-	const auto Mesh = FindComponentByClass<UStaticMeshComponent>();
-	if (Mesh)
+	if (MeshComponent)
 	{
-		const auto DynMaterial = Mesh->CreateAndSetMaterialInstanceDynamic(0);
+		const auto DynMaterial = MeshComponent->CreateAndSetMaterialInstanceDynamic(0);
 		if (DynMaterial)
 		{
 			DynMaterial->SetVectorParameterValue("Color", CurrentColor);

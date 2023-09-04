@@ -10,6 +10,8 @@ class UFloatingPawnMovement;
 class UCameraComponent;
 class USoundCue;
 class UNiagaraSystem;
+class USpringArmComponent;
+class USphereComponent;
 
 UCLASS()
 class TESTTASK_API ATT_BasePlayer : public APawn
@@ -24,7 +26,13 @@ protected:
 	UCameraComponent* CameraComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UStaticMeshComponent* StaticMesh;
+	UStaticMeshComponent* MeshComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	USpringArmComponent* SpringArmComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	USphereComponent* SphereComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
 	float MaxSpeed = 750.0f;
