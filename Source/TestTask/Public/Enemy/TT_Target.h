@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "TT_Target.generated.h"
 
+class UNiagaraSystem;
 UCLASS()
 class TESTTASK_API ATT_Target : public AActor
 {
@@ -25,10 +26,19 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Movement")
-		float UpdateTime;
+	float UpdateTime;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
-		float ImpulseStrength;
+	float ImpulseStrength;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "VFX")
+	UNiagaraSystem* CollisionWithTargetEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "VFX")
+	UNiagaraSystem* TargetCollisionWithCleanerEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "VFX")
+	UNiagaraSystem* CleanerCollisionWithCleanerEffect;
 
 
 	virtual void BeginPlay() override;

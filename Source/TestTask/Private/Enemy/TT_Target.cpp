@@ -4,6 +4,7 @@
 #include "Enemy/TT_Target.h"
 #include "TimerManager.h"
 #include "TT_GameMode.h"
+#include "NiagaraFunctionLibrary.h"
 
 ATT_Target::ATT_Target()
 {
@@ -51,6 +52,13 @@ void ATT_Target::NotifyActorBeginOverlap(AActor* OtherActor)
 	if (!Target)
 		return;
 
+	if (!GetWorld())
+		return;
+
+	const auto GameMode = Cast<ATT_GameMode>(GetWorld()->GetAuthGameMode());
+	if (!GameMode)
+		return;
+
 	//Marked cleaner can "clean" other targers and cleaners and doesn't mark other targets
 	/*if (bIsMarked && !bIsCleaner && !Target->bIsMarked && !Target->bIsCleaner)
 	{
@@ -61,13 +69,6 @@ void ATT_Target::NotifyActorBeginOverlap(AActor* OtherActor)
 		Target->SetDefaultColor(Target->DefaultColor);
 	}*/
 
-	if (!GetWorld())
-		return;
-
-	const auto GameMode = Cast<ATT_GameMode>(GetWorld()->GetAuthGameMode());
-	if (!GameMode)
-		return;
-
 	//Marked cleaner can't clean anymore, it markes other targets instead
 	if (bIsMarked && !Target->bIsMarked && !Target->bIsCleaner)
 	{
@@ -77,6 +78,9 @@ void ATT_Target::NotifyActorBeginOverlap(AActor* OtherActor)
 		{
 			GameMode->SetCleanersNum(GameMode->GetCleanersNum() - 1);
 		}
+
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), CollisionWithTargetEffect, Target->GetActorLocation(),
+			FRotator::ZeroRotator, FVector{ 0.2f, 0.2f, 0.2f });
 	}
 	else if (bIsCleaner && !bIsMarked && Target->bIsMarked)
 	{
@@ -85,6 +89,13 @@ void ATT_Target::NotifyActorBeginOverlap(AActor* OtherActor)
 		if (Target->bIsCleaner)
 		{
 			GameMode->SetCleanersNum(GameMode->GetCleanersNum() + 1);
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), CleanerCollisionWithCleanerEffect, Target->GetActorLocation(),
+				FRotator::ZeroRotator, FVector{ 0.2f, 0.2f, 0.2f });
+		}
+		else
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), TargetCollisionWithCleanerEffect, Target->GetActorLocation(),
+				FRotator::ZeroRotator, FVector{ 0.2f, 0.2f, 0.2f });
 		}
 	}
 }

@@ -8,6 +8,8 @@
 
 class UFloatingPawnMovement;
 class UCameraComponent;
+class USoundCue;
+class UNiagaraSystem;
 
 UCLASS()
 class TESTTASK_API ATT_BasePlayer : public APawn
@@ -26,6 +28,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
 	float MaxSpeed = 750.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sound")
+	USoundCue* CollisionSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "VFX")
+	UNiagaraSystem* CollisionEffect;
 
 	virtual void BeginPlay() override;
 

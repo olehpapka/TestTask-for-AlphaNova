@@ -10,6 +10,9 @@
 #include "Enemy/TT_Target.h"
 #include "TT_GameMode.h"
 #include "DrawDebugHelpers.h"
+#include "Sound/SoundCue.h"
+#include "Kismet/GameplayStatics.h"
+#include "NiagaraFunctionLibrary.h"
 
 ATT_BasePlayer::ATT_BasePlayer()
 {
@@ -78,6 +81,10 @@ void ATT_BasePlayer::NotifyActorBeginOverlap(AActor* OtherActor)
 		{
 			GameMode->SetCleanersNum(GameMode->GetCleanersNum() - 1);
 		}
+
+		UGameplayStatics::PlaySound2D(GetWorld(), CollisionSound, 2.0f);
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), CollisionEffect, Target->GetActorLocation(),
+			FRotator::ZeroRotator, FVector{0.2f, 0.2f, 0.2f});
 	}
 }
 
