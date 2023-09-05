@@ -1,5 +1,7 @@
 .vs
 *.sln
+*.vsconfig
+.git
 DerivedDataCache/
 Intermediate/
 Saved/

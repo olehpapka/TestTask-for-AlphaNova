@@ -32,7 +32,7 @@ protected:
 	TSubclassOf<ATT_Target> EnemyClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Game", meta = (ClampMin = "0", ClampMax = "50"))
-	int32 TargetsNum = 5;
+	int32 TargetsNum = 10;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Game", meta = (ClampMin = "0", ClampMax = "15"))
 	int32 CleanersNum = 2;
